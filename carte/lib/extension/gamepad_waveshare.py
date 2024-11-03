@@ -1,20 +1,20 @@
 # Librairies
-from extension.pinout import mbits_pin
 from toolbox.signal   import In, In_Analog, Out_Freq
 
 
 # Classes
 class Gamepad() :
-    A = In(mbits_pin[5],  True)
-    B = In(mbits_pin[11], True)
-    C = In(mbits_pin[15], True)
-    D = In(mbits_pin[14], True)
-    E = In(mbits_pin[13], True)
-    F = In(mbits_pin[12], True)
-    P = In(mbits_pin[8],  True)
-    X = In_Analog(mbits_pin[1], 5)
-    Y = In_Analog(mbits_pin[2], 5)
-    buzzer = Out_Freq(26)
+    def __init__(self, pinout):
+        self.A = In(pinout[5],  True)
+        self.B = In(pinout[11], True)
+        self.C = In(pinout[15], True)
+        self.D = In(pinout[14], True)
+        self.E = In(pinout[13], True)
+        self.F = In(pinout[12], True)
+        self.P = In(pinout[8],  True)
+        self.X = In_Analog(pinout[1], 5)
+        self.Y = In_Analog(pinout[2], 5)
+        self.buzzer = Out_Freq(26)
     
     def update(self) :
         data = {"A":self.A, "B":self.B,
@@ -26,8 +26,10 @@ class Gamepad() :
 
 
 ### Test fonctonnement gamepad ###
-def gamepad_test(buzzer = True) :
+def gamepad_test(buzzer=True, vibreur=True) :
     from time import sleep
+    from extension.pinout import mbits_pin
+
     gp = Gamepad()
 
     if buzzer :

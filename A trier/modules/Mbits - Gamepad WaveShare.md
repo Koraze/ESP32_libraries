@@ -2,6 +2,8 @@
 
 ![[- 🖼️ Pictures/Embarques/Modules/gamepad waveshare.png]]
 
+> [!warning] Activer le WiFi sur les cartes ESP32 peut rendre certaines broches analogiques inutilisables !
+
 ```python
 from machine import ADC, Pin, PWM
 import json

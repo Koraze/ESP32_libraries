@@ -1,6 +1,6 @@
 {
     "urls": [
-        ["bridges/espnow.py", "github:Koraze/ESP32_librairies/carte/lib/bridges/espnow.py"],
+        ["bridges/espnow.py", "github:Koraze/ESP32_libraries/carte/lib/bridges/espnow.py"],
     ],
     "deps": [
     ],

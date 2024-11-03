@@ -17,17 +17,23 @@ Notons que `mip.install(...)` *Expliquer fonctionnement *
 # - instalaltion du support REPL
 
 import mip
-mip.install("github:Koraze/ESP32_librairies/mip/bridge_espnow.json") 
-mip.install("github:Koraze/ESP32_librairies/mip/bridge_repl.json")
+mip.install("github:Koraze/ESP32_libraries/mip/bridge_espnow.json") 
+mip.install("github:Koraze/ESP32_libraries/mip/bridge_repl.json")
 ```
 
 
 # Librairies MicroPython
+```python
+import mip
+mip.install("github:Koraze/ESP32_libraries/mip/extension_gamepad_waveshare.json")
+```
+
+
 
 ## Installation du client MQTT (basé sur les librairies de fizista)
 ```python
 import mip
-mip.install("github:Koraze/ESP32_librairies/mip/bridge_mqtt.json")
+mip.install("github:Koraze/ESP32_libraries/mip/bridge_mqtt.json")
 ```
 
 ## Installation des modules i2c (basé sur le travail d'Adafruit)

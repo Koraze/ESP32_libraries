@@ -1,19 +1,19 @@
 # Librairies
-from extension.pinout import microbit_pin
+from extension.pinout import mbits_pin
 from toolbox.signal   import In, In_Analog, Out_Freq
 
 
 # Classes
 class Gamepad() :
-    A = In(microbit_pin[5],  True)
-    B = In(microbit_pin[11], True)
-    C = In(microbit_pin[15], True)
-    D = In(microbit_pin[14], True)
-    E = In(microbit_pin[13], True)
-    F = In(microbit_pin[12], True)
-    P = In(microbit_pin[8],  True)
-    X = In_Analog(microbit_pin[1], 5)
-    Y = In_Analog(microbit_pin[2], 5)
+    A = In(mbits_pin[5],  True)
+    B = In(mbits_pin[11], True)
+    C = In(mbits_pin[15], True)
+    D = In(mbits_pin[14], True)
+    E = In(mbits_pin[13], True)
+    F = In(mbits_pin[12], True)
+    P = In(mbits_pin[8],  True)
+    X = In_Analog(mbits_pin[1], 5)
+    Y = In_Analog(mbits_pin[2], 5)
     buzzer = Out_Freq(26)
     
     def update(self) :

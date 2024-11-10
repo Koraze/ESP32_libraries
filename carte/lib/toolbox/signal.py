@@ -14,7 +14,7 @@ from machine import ADC, Pin, PWM
 # Classes
 class In() :
     def __init__(self, value, inversion=False):
-        self.__pin = Pin(value, Pin.IN)
+        self.__pin = Pin(value, Pin.IN, Pin.PULL_DOWN)
         self.__inv = inversion
         
     def __get__(self, obj, objtype=None):
@@ -36,16 +36,22 @@ class Out() :
 
 class In_Analog() :
     def __init__(self, value, buffer = 1):
-        self.__adc = ADC(Pin(value))
-        self.__adc.atten(ADC.ATTN_11DB)
-        self.__adc.width(ADC.WIDTH_12BIT)
-        self.__buff = [0] * buffer
+        try :
+            self.__adc = ADC(Pin(value))
+            self.__adc.atten(ADC.ATTN_11DB)
+            self.__adc.width(ADC.WIDTH_12BIT)
+            self.__buff = [0] * buffer
+        except :
+            self.__adc = None
+            print("wrong pin or parameters")
         
     def __get__(self, obj, objtype=None):
-        val = self.__adc.read() - 2048
-        self.__buff.append(val)
-        self.__buff.pop(0)
-        return int(sum(self.__buff) / len(self.__buff))
+        if self.__adc :
+            val = self.__adc.read() - 2048
+            self.__buff.append(val)
+            self.__buff.pop(0)
+            return int(sum(self.__buff) / len(self.__buff))
+        return None
 
 
 class Out_Freq() :

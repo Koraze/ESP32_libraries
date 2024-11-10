@@ -5,16 +5,16 @@ from toolbox.signal   import In, In_Analog, Out_Freq
 # Classes
 class Gamepad() :
     def __init__(self, pinout):
-        self.A = In(pinout[5],  True)
-        self.B = In(pinout[11], True)
-        self.C = In(pinout[15], True)
-        self.D = In(pinout[14], True)
-        self.E = In(pinout[13], True)
-        self.F = In(pinout[12], True)
-        self.P = In(pinout[8],  True)
-        self.X = In_Analog(pinout[1], 5)
-        self.Y = In_Analog(pinout[2], 5)
-        self.buzzer = Out_Freq(26)
+        Gamepad.A = In(pinout[5],  True)
+        Gamepad.B = In(pinout[11], True)
+        Gamepad.C = In(pinout[15], True)
+        Gamepad.D = In(pinout[14], True)
+        Gamepad.E = In(pinout[13], True)
+        Gamepad.F = In(pinout[12], True)
+        Gamepad.P = In(pinout[8],  True)
+        Gamepad.X = In_Analog(pinout[1], 5)
+        Gamepad.Y = In_Analog(pinout[2], 5)
+        Gamepad.buzzer = Out_Freq(pinout[0])
     
     def update(self) :
         data = {"A":self.A, "B":self.B,
@@ -28,9 +28,9 @@ class Gamepad() :
 ### Test fonctonnement gamepad ###
 def gamepad_test(buzzer=True, vibreur=True) :
     from time import sleep
-    from extension.pinout import mbits_pin
+    from extension.pinout import bpibit_pin
 
-    gp = Gamepad()
+    gp = Gamepad(bpibit_pin)
 
     if buzzer :
         gp.buzzer = gp.X

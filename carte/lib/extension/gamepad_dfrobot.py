@@ -5,17 +5,17 @@ from toolbox.signal   import In, In_Analog, Out, Out_Freq
 # Classes
 class Gamepad() :
     def __init__(self, pinout):
-        self.A = In(pinout[5],  True)
-        self.B = In(pinout[11], True)
-        self.C = In(pinout[13], True)
-        self.D = In(pinout[14], True)
-        self.E = In(pinout[15], True)
-        self.F = In(pinout[16], True)
-        self.P = In(pinout[8],  True)
-        self.X = In_Analog(pinout[1], 5)
-        self.Y = In_Analog(pinout[2], 5)
-        self.buzzer  = Out_Freq(26)
-        self.vibreur = Out(pinout[12])
+        Gamepad.A = In(pinout[5],  True)
+        Gamepad.B = In(pinout[11], True)
+        Gamepad.C = In(pinout[13], True)
+        Gamepad.D = In(pinout[14], True)
+        Gamepad.E = In(pinout[15], True)
+        Gamepad.F = In(pinout[16], True)
+        Gamepad.P = In(pinout[8],  True)
+        Gamepad.X = In_Analog(pinout[1], 5)
+        Gamepad.Y = In_Analog(pinout[2], 5)
+        Gamepad.buzzer  = Out_Freq(pinout[0])
+        Gamepad.vibreur = Out(pinout[12])
     
     def update(self) :
         data = {"A":self.A, "B":self.B,

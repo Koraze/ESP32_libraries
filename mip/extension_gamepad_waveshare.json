@@ -1,6 +1,9 @@
 {
     "urls": [
+	    ["__init__.py",         "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["toolbox/__init__.py",            "github:Koraze/ESP32_libraries/carte/lib/toolbox/__init__.py"],
         ["toolbox/signal.py",              "github:Koraze/ESP32_libraries/carte/lib/toolbox/signal.py"],
+        ["extension/__init__.py",          "github:Koraze/ESP32_libraries/carte/lib/extension/__init__.py"],
         ["extension/pinout.py",            "github:Koraze/ESP32_libraries/carte/lib/extension/pinout.py"],
         ["extension/gamepad_waveshare.py", "github:Koraze/ESP32_libraries/carte/lib/extension/gamepad_waveshare.py"],
     ],

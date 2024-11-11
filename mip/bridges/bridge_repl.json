@@ -1,0 +1,10 @@
+{
+    "urls": [
+        ["__init__.py",         "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["bridges/__init__.py", "github:Koraze/ESP32_libraries/carte/lib/bridges/__init__.py"],
+        ["bridges/repl.py",     "github:Koraze/ESP32_libraries/carte/lib/bridges/repl.py"],
+    ],
+    "deps": [
+    ],
+    "version": "0.1"
+}

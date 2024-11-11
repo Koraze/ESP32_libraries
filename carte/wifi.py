@@ -52,6 +52,7 @@ def connect(routeurs=WIFI_ROUTEURS):
     
     # Si déjà connecté
     if connected():
+        print("\nWifi : Déjà connecté", end="")
         return True
     
     # Si non encore connecté

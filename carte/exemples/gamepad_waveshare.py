@@ -1,0 +1,18 @@
+# import mip
+# mip.install("github:Koraze/ESP32_libraries/mip/modules/extension_gamepad_waveshare.json")
+
+
+# Libraries
+from time import sleep
+from modules.microbit.pinout import mbits_pin  # importez la correspondance 
+from modules.microbit.gamepad_waveshare import Gamepad
+
+
+# Lecture des boutons gamepad
+gp = Gamepad(mbits_pin)
+
+while True :
+    gp.buzzer  = gp.X
+    gp.vibreur = gp.P
+    print(gp.read(), end="         \r")
+    sleep(0.1)

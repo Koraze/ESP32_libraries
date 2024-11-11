@@ -17,7 +17,7 @@ class Gamepad() :
         Gamepad.buzzer  = Out_Freq(pinout[0])
         Gamepad.vibreur = Out(pinout[12])
     
-    def update(self) :
+    def read_json(self) :
         data = {"A":self.A, "B":self.B,
                 "C":self.C, "D":self.D,
                 "E":self.E, "F":self.F,
@@ -25,17 +25,21 @@ class Gamepad() :
                 "Y":self.Y}
         return data
 
+    def read(self) :
+        data = str(self.A) + str(self.B) + str(self.C) + str(self.D) + 
+               str(self.E) + str(self.F) + str(self.P) + " "
+               str(self.X) + " " + str(self.Y)
+        return data
+
 
 ### Test fonctonnement gamepad (avec une carte mbits) ###
-def gamepad_test(buzzer=True, vibreur=True) :
+if __name__ == '__main__':
     from time import sleep
     from extension.pinout import mbits_pin
 
     gp = Gamepad(mbits_pin)
 
-    if buzzer :
-        gp.buzzer  = gp.X
-    if vibreur :
-        gp.vibreur = gp.P
-    print(gp.update(), "    ", end="   \r")
+    gp.buzzer  = gp.X
+    gp.vibreur = gp.P
+    print(gp.read(), end="         \r")
     sleep(0.1)

@@ -1,0 +1,11 @@
+{
+    "urls": [
+        ["modules/__init__.py",                   "github:Koraze/ESP32_libraries/carte/lib/modules/__init__.py"],
+        ["modules/microbit/__init__.py",          "github:Koraze/ESP32_libraries/carte/lib/modules/microbit/__init__.py"],
+        ["modules/microbit/pinout.py",            "github:Koraze/ESP32_libraries/carte/lib/modules/microbit/pinout.py"],
+    ],
+    "deps": [
+        ["github:Koraze/ESP32_libraries/mip/toolbox/signal.json", "main"],
+    ],
+    "version": "0.1"
+}

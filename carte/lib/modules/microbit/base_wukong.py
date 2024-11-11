@@ -1,69 +1,15 @@
-
-![[- 🖼️ Pictures/Embarques/Modules/extension elecfreaks 2.avif]]
-
-![[- 🖼️ Pictures/Embarques/Modules/extension elecfreaks.png]]
-
-[Wiki officiel](https://wiki.elecfreaks.com/en/microbit/expansion-board/wukong/)
-[Code source TypeScript](https://github.com/elecfreaks/pxt-wukong/blob/master/main.ts)
-
-```
-# Ecrit ton programme ici ;-)
-from machine  import I2C, Pin
-from time import sleep
-WUKONG_ADDR = 0x10
-
-class WUKONG(object):
-
-    def __init__(self, i2c):
-        self.i2c = i2c
-
-
-    def set_light_breath(self, br: bool):
-        if br:
-            self.i2c.writeto(WUKONG_ADDR, bytearray([0x11, 0, 0, 0]))
-            sleep(0.1)
-            self.i2c.writeto(WUKONG_ADDR, bytearray([0x12, 150, 0, 0]))
-        else:
-            self.i2c.writeto(WUKONG_ADDR, bytearray([0x12, 0, 0, 0]))
-            sleep(0.1)
-            self.i2c.writeto(WUKONG_ADDR, bytearray([0x11, 160, 0, 0]))
-
-
-    def set_light_breath2(self, br: bool):
-        if br:
-            self.i2c.writeto_mem(WUKONG_ADDR, 0x11, bytearray([0, 0, 0]))
-            sleep(0.1)
-            self.i2c.writeto_mem(WUKONG_ADDR, 0x12, bytearray([150, 0, 0]))
-        else:
-            self.i2c.writeto_mem(WUKONG_ADDR, 0x12, bytearray([0, 0, 0]))
-            sleep(0.1)
-            self.i2c.writeto_mem(WUKONG_ADDR, 0x11, bytearray([160, 0, 0]))
-
-
-i2c = I2C(0, scl=Pin(21), sda=Pin(22), freq=100000)
-print(i2c.scan())
-
-wukong = WUKONG(i2c)
-wukong.set_light_breath(True)
-
-```
-
-```python
+# Librairies
 from micropython import const
-from bridges.i2c_bytes  import RWBytes, ROBytes
-from bridges.i2c_bit    import RWBit,   ROBit
-from bridges.i2c_bits   import RWBits,  ROBits
-from bridges.i2c_device import I2C_device
-from time import sleep
-
-from micropython import const
-from i2c_manage.i2c_bytes  import RWBytes
-from i2c_manage.i2c_device import I2C_device
+from bridges.i2c.i2c_bytes  import RWBytes, ROBytes
+from bridges.i2c.i2c_bit    import RWBit,   ROBit
+from bridges.i2c.i2c_bits   import RWBits,  ROBits
+from bridges.i2c.i2c_device import I2C_device
 from time import sleep
 
 
+# Classes
 class WUKONG:
-    
+    # Registres
     __struct = ">BBB"
     __motor1 = RWBytes(0x01, __struct)
     __motor2 = RWBytes(0x02, __struct)
@@ -77,7 +23,8 @@ class WUKONG:
     __servo7 = RWBytes(0x09, __struct)
     __lightA = RWBytes(0x11, __struct)
     __lightB = RWBytes(0x12, __struct)
-    
+
+    # Listes de registres
     __motor = [__motor1, __motor2]
     __servo = [__servo0, __servo1, __servo2, __servo3, __servo4, __servo5, __servo6, __servo7]
     __light = [__lightA, __lightB]
@@ -108,7 +55,7 @@ class WUKONG:
     
     def servo_stop(self):
         for i in range(8) :
-            self.__servo[i] = (90, 0, 0)
+            self.__servo[i].__set__(self, (90, 0, 0))
     
     
     def light_set(self, mode, light = 0):
@@ -120,12 +67,19 @@ class WUKONG:
             self.__lightA = (  160, 0, 0)
 
 
+### Test fonctonnement gamepad (avec une carte mbits) ###
 if __name__ == '__main__':
     from machine import I2C, Pin
     from neopixel import NeoPixel
+    from time import sleep
     
     i2c = I2C(0, scl=Pin(21), sda=Pin(22), freq=100000)
     wk = WUKONG(i2c)
+
+    wk.light_set(False, True)
+    sleep(2)
+    wk.light_set(False, False)
+
     for i in range(8) :
         wk.servo_set(i, 180)
     
@@ -133,5 +87,3 @@ if __name__ == '__main__':
     for i in range(0, 4):
         np[i] = (0, 0, 30)
     np.write()
-
-```

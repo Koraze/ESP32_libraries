@@ -15,8 +15,8 @@ class Gamepad() :
         Gamepad.X = In_Analog(pinout[1], 5)
         Gamepad.Y = In_Analog(pinout[2], 5)
         Gamepad.buzzer = Out_Freq(pinout[0])
-    
-    def update(self) :
+
+    def read_json(self) :
         data = {"A":self.A, "B":self.B,
                 "C":self.C, "D":self.D,
                 "E":self.E, "F":self.F,
@@ -24,15 +24,20 @@ class Gamepad() :
                 "Y":self.Y}
         return data
 
+    def read(self) :
+        data = str(self.A) + str(self.B) + str(self.C) + str(self.D) + 
+               str(self.E) + str(self.F) + str(self.P) + " "
+               str(self.X) + " " + str(self.Y)
+        return data
 
-### Test fonctonnement gamepad ###
-def gamepad_test(buzzer=True, vibreur=True) :
+
+### Test fonctonnement gamepad (avec une carte mbits) ###
+if __name__ == '__main__':
     from time import sleep
-    from extension.pinout import bpibit_pin
+    from extension.pinout import mbits_pin
 
-    gp = Gamepad(bpibit_pin)
+    gp = Gamepad(mbits_pin)
 
-    if buzzer :
-        gp.buzzer = gp.X
-    print(gp.update(), "    ", end="\r")
+    gp.buzzer  = gp.X
+    print(gp.read(), end="         \r")
     sleep(0.1)

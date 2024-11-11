@@ -46,11 +46,14 @@ class In_Analog() :
             print("wrong pin or parameters")
         
     def __get__(self, obj, objtype=None):
-        if self.__adc :
-            val = self.__adc.read() - 2048
-            self.__buff.append(val)
-            self.__buff.pop(0)
-            return int(sum(self.__buff) / len(self.__buff))
+        try :
+            if self.__adc :
+                val = self.__adc.read() - 2048
+                self.__buff.append(val)
+                self.__buff.pop(0)
+                return int(sum(self.__buff) / len(self.__buff))
+        except :
+            self.__adc = None
         return None
 
 

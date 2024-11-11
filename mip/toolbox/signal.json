@@ -1,0 +1,10 @@
+{
+    "urls": [
+        ["__init__.py",          "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["toolbox/__init__.py",  "github:Koraze/ESP32_libraries/carte/lib/toolbox/__init__.py"],
+        ["toolbox/signal.py",    "github:Koraze/ESP32_libraries/carte/lib/toolbox/signal.py"],
+    ],
+    "deps": [
+    ],
+    "version": "0.1"
+}

@@ -1,0 +1,10 @@
+{
+    "urls": [
+        ["modules/microbit/gamepad_waveshare.py", "github:Koraze/ESP32_libraries/carte/lib/modules/microbit/gamepad_waveshare.py"],
+    ],
+    "deps": [
+        ["github:Koraze/ESP32_libraries/mip/toolbox/signal.json", "main"], 
+        ["github:Koraze/ESP32_libraries/mip/modules/pinout_microbit.json", "main"], 
+    ],
+    "version": "0.1"
+}

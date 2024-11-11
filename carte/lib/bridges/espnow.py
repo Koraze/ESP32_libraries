@@ -23,7 +23,7 @@ class ESPNOW():
         
         self.e = espnow.ESPNow()
         self.e.active(True)
-        self.e.add_peer(multicast)
+        self.e.add_peer(self.multicast)
         
     def add_peer(self, peer):
         if peer[0] & 0x01 :
@@ -36,7 +36,7 @@ class ESPNOW():
         else :
             data = str(data)
         if not peer :
-            peer = multicast
+            peer = self.multicast
         self.e.send(peer, data, True)
         print(peer, data)
     
@@ -51,13 +51,13 @@ class ESPNOW():
 
 
 ### Test émission et réception ###
-def exemple_send() :
+def test_send() :
     e = ESPNOW()
     for i in range(100):
         e.send(i, None, False)
 
 ### Test émission et réception ###
-def exemple_receive() :
+def test_receive() :
     e = ESPNOW()
     while True :
         e.read(False)

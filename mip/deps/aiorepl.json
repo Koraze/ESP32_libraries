@@ -1,0 +1,7 @@
+{
+  "urls": [
+    ["deps/__init__.py", "github:Koraze/ESP32_libraries/carte/lib/deps/__init__.py"],
+    ["deps/aiorepl.py",  "https://raw.githubusercontent.com/micropython/micropython-lib/refs/heads/master/micropython/aiorepl/aiorepl.py" ],
+  ],
+  "version": "0.1"
+}

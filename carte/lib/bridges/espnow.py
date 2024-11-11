@@ -38,7 +38,7 @@ class ESPNOW():
         if not peer :
             peer = self.multicast
         self.e.send(peer, data, True)
-        print(peer, data)
+        return peer, data
     
     def read(self, json_data=True):
         if self.e.any():

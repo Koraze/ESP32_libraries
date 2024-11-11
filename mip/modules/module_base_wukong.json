@@ -3,7 +3,7 @@
         ["modules/microbit/base_wukong.py", "github:Koraze/ESP32_libraries/carte/lib/modules/microbit/base_wukong.py"],
     ],
     "deps": [
-        ["github:Koraze/ESP32_libraries/mip/bridges/bridge_i2c.json", "main"] 
+        ["github:Koraze/ESP32_libraries/mip/bridges/bridge_i2c.json",      "main"] 
         ["github:Koraze/ESP32_libraries/mip/modules/pinout_microbit.json", "main"], 
     ],
     "version": "0.1"

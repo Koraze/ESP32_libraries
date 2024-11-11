@@ -5,6 +5,7 @@
         ["toolbox/signal.py",    "github:Koraze/ESP32_libraries/carte/lib/toolbox/signal.py"],
     ],
     "deps": [
+        ["github:Koraze/ESP32_libraries/mip/deps/aiorepl.json", "main"],
     ],
     "version": "0.1"
 }

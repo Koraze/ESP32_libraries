@@ -1,5 +1,5 @@
 # import mip
-# mip.install("github:Koraze/ESP32_libraries/mip/modules/extension_gamepad_dfrobot.json")
+# mip.install("github:Koraze/ESP32_libraries/mip/modules/module_gamepad_dfrobot.json")
 
 
 # Libraries

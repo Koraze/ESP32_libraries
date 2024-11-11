@@ -1,5 +1,5 @@
 # import mip
-# mip.install("github:Koraze/ESP32_libraries/mip/modules/extension_gamepad_waveshare.json")
+# mip.install("github:Koraze/ESP32_libraries/mip/modules/module_gamepad_waveshare.json")
 
 
 # Libraries

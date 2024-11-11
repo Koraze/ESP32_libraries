@@ -28,7 +28,7 @@ class RWBytes(RWbase):
         return value
 
     def __set__(self, obj, value: int) -> None:
-        self._read(obj)
+        # self._read(obj)
         if type(value) is int :
             struct.pack_into(self._format, self._buf, 0,  value)
         else :

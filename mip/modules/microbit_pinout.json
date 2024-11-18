@@ -5,7 +5,7 @@
         ["modules/microbit/pinout.py",            "github:Koraze/ESP32_libraries/carte/lib/modules/microbit/pinout.py"],
     ],
     "deps": [
-        ["github:Koraze/ESP32_libraries/mip/toolbox/signal.json", "main"],
+        ["github:Koraze/ESP32_libraries/mip/toolbox.json", "main"],
     ],
     "version": "0.1"
 }

@@ -1,0 +1,15 @@
+{
+    "urls": [
+        ["__init__.py",          "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["toolbox/__init__.py",  "github:Koraze/ESP32_libraries/carte/lib/toolbox/__init__.py"],
+        ["toolbox/async.py",     "github:Koraze/ESP32_libraries/carte/lib/toolbox/async.py"],
+        ["toolbox/others.py",    "github:Koraze/ESP32_libraries/carte/lib/toolbox/others.py"],
+        ["toolbox/thread.py",    "github:Koraze/ESP32_libraries/carte/lib/toolbox/thread.py"],
+        ["toolbox/timer.py",     "github:Koraze/ESP32_libraries/carte/lib/toolbox/timer.py"],
+        ["toolbox/watch.py",     "github:Koraze/ESP32_libraries/carte/lib/toolbox/watch.py"],
+    ],
+    "deps": [
+        ["github:Koraze/ESP32_libraries/mip/deps/aiorepl.json", "main"],
+    ],
+    "version": "0.1"
+}

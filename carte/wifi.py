@@ -76,6 +76,7 @@ def connect(routeurs=WIFI_ROUTEURS):
         
         # Connexion et attente
         print("\nWifi : Tentative de connexion a", ssid, "...", end="")
+        station.disconnect()
         station.connect(ssid, mdp)
         for i in range(10):
             sleep(1) # élément bloquant

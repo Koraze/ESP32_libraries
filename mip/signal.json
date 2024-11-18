@@ -1,0 +1,14 @@
+{
+    "urls": [
+        ["__init__.py",          "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["signal/__init__.py",   "github:Koraze/ESP32_libraries/carte/lib/signal/__init__.py"],
+        ["signal/limit.py",      "github:Koraze/ESP32_libraries/carte/lib/signal/limit.py"],
+        ["signal/mean.py",       "github:Koraze/ESP32_libraries/carte/lib/signal/mean.py"],
+        ["signal/pid.py",        "github:Koraze/ESP32_libraries/carte/lib/signal/pid.py"],
+        ["signal/pin.py",        "github:Koraze/ESP32_libraries/carte/lib/signal/pin.py"],
+    ],
+    "deps": [
+        ["github:Koraze/ESP32_libraries/mip/toolbox.json",  "main"],
+    ],
+    "version": "0.1"
+}

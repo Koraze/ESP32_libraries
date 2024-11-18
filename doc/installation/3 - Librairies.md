@@ -17,8 +17,18 @@ Notons que `mip.install(...)` *Expliquer fonctionnement *
 # - instalaltion du support REPL
 
 import mip
-mip.install("github:Koraze/ESP32_libraries/mip/bridge_espnow.json") 
-mip.install("github:Koraze/ESP32_libraries/mip/bridge_repl.json")
+mip.install("github:Koraze/ESP32_libraries/mip/toolbox.json")
+mip.install("github:Koraze/ESP32_libraries/mip/signal.json")
+mip.install("github:Koraze/ESP32_libraries/mip/display.json")
+
+mip.install("github:Koraze/ESP32_libraries/mip/bridges/i2c.json")
+mip.install("github:Koraze/ESP32_libraries/mip/bridges/espnow.json")
+mip.install("github:Koraze/ESP32_libraries/mip/bridges/mqtt.json")
+mip.install("github:Koraze/ESP32_libraries/mip/bridges/repl.json")
+
+mip.install("github:Koraze/ESP32_libraries/mip/modules/microbit/base_wukong.json")
+mip.install("github:Koraze/ESP32_libraries/mip/modules/microbit/gamepad_dfrobot.json")
+mip.install("github:Koraze/ESP32_libraries/mip/modules/microbit/gamepad_waveshare.json")
 ```
 
 

@@ -1,0 +1,12 @@
+{
+    "urls": [
+        ["__init__.py",         "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["bridges/__init__.py", "github:Koraze/ESP32_libraries/carte/lib/bridges/__init__.py"],
+        ["bridges/mqtt.py",     "github:Koraze/ESP32_libraries/carte/lib/bridges/mqtt.py"],
+    ],
+    "deps": [
+        ["github:Koraze/ESP32_libraries/mip/deps/mqtt_robust2.json", "main"],
+        ["github:Koraze/ESP32_libraries/mip/toolbox.json",           "main"],
+    ],
+    "version": "0.1"
+}

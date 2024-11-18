@@ -6,7 +6,7 @@
         ["bridges/i2c/i2c_bit.py",     "github:Koraze/ESP32_libraries/carte/lib/bridges/i2c/i2c_bit.py"],
         ["bridges/i2c/i2c_bits.py",    "github:Koraze/ESP32_libraries/carte/lib/bridges/i2c/i2c_bits.py"],
         ["bridges/i2c/i2c_bytes.py",   "github:Koraze/ESP32_libraries/carte/lib/bridges/i2c/i2c_bytes.py"],
-        ["bridges/i2c/i2c_device.py",  "github:Koraze/ESP32_libraries/carte/lib/bridges/i2c/i2c_device.py"]
+        ["bridges/i2c/i2c_device.py",  "github:Koraze/ESP32_libraries/carte/lib/bridges/i2c/i2c_device.py"],
     ],
     "deps": [
     ],

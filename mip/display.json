@@ -1,0 +1,10 @@
+{
+    "urls": [
+        ["__init__.py",                 "github:Koraze/ESP32_libraries/carte/lib/__init__.py"],
+        ["display/__init__.py",         "github:Koraze/ESP32_libraries/carte/lib/display/__init__.py"],
+        ["display/neopixel_matrix.py",  "github:Koraze/ESP32_libraries/carte/lib/display/neopixel_matrix.py"],
+    ],
+    "deps": [
+    ],
+    "version": "0.1"
+}

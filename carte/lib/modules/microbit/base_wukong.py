@@ -1,9 +1,6 @@
 # Librairies
 from micropython import const
-from bridges.i2c.i2c_bytes  import RWBytes, ROBytes
-from bridges.i2c.i2c_bit    import RWBit,   ROBit
-from bridges.i2c.i2c_bits   import RWBits,  ROBits
-from bridges.i2c.i2c_device import I2C_device
+from bridges.i2c.i2c_device import I2C_device, RWBytes
 from time import sleep
 
 
@@ -53,7 +50,7 @@ class WUKONG:
         self.__servo[servo].__set__(self, (angle, 0, 0))
     
     
-    def servo_stop(self):
+    def servo_stop_all(self):
         for i in range(8) :
             self.__servo[i].__set__(self, (90, 0, 0))
     

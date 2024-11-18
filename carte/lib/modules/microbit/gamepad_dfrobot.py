@@ -35,7 +35,7 @@ class Gamepad() :
 ### Test fonctonnement gamepad (avec une carte mbits) ###
 if __name__ == '__main__':
     from time import sleep
-    from extension.pinout import mbits_pin
+    from .pinout import mbits_pin
 
     gp = Gamepad(mbits_pin)
 

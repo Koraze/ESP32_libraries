@@ -81,9 +81,9 @@ class Matrix():
             for x in range(pic.size_x) :
                 color = pic.pixel[y][x]
                 if not transparency or color != [0, 0, 0]:
-                    x, y = self.__rotate(rotate, pic, x, y)
-                    x, y = x+start_x, y+start_y
-                    self.__np_write(color, x, y)
+                    xx, yy = self.__rotate(rotate, pic, x, y)
+                    xx, yy = xx+start_x, yy+start_y
+                    self.__np_write(color, xx, yy)
 
     def show(self):
         self.__np.write()

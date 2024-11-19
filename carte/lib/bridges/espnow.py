@@ -23,7 +23,10 @@ class ESPNOW():
         
         self.e = espnow.ESPNow()
         self.e.active(True)
-        self.e.add_peer(self.multicast)
+        try :
+            self.e.add_peer(self.multicast)
+        except :
+            pass
         
     def add_peer(self, peer):
         if peer[0] & 0x01 :

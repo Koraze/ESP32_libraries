@@ -3,7 +3,6 @@
         ["modules/microbit/gamepad_dfrobot.py", "github:Koraze/ESP32_libraries/carte/lib/modules/microbit/gamepad_dfrobot.py"],
     ],
     "deps": [
-        ["github:Koraze/ESP32_libraries/mip/bridges/i2c.json",             "main"],
         ["github:Koraze/ESP32_libraries/mip/modules/microbit_pinout.json", "main"], 
     ],
     "version": "0.1"

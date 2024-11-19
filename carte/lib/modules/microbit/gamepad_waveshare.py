@@ -1,5 +1,5 @@
 # Librairies
-from toolbox.signal   import In, In_Analog, Out_Freq
+from signal.pin   import In, In_Analog, Out_Freq
 
 
 # Classes
@@ -12,8 +12,8 @@ class Gamepad() :
         Gamepad.E = In(pinout[13], True)
         Gamepad.F = In(pinout[12], True)
         Gamepad.P = In(pinout[8],  True)
-        Gamepad.X = In_Analog(pinout[1], 5)
-        Gamepad.Y = In_Analog(pinout[2], 5)
+        Gamepad.X = In_Analog(pinout[1], 2)
+        Gamepad.Y = In_Analog(pinout[2], 2)
         Gamepad.buzzer = Out_Freq(pinout[0])
 
     def read_json(self) :
@@ -25,8 +25,8 @@ class Gamepad() :
         return data
 
     def read(self) :
-        data = str(self.A) + str(self.B) + str(self.C) + str(self.D) + 
-               str(self.E) + str(self.F) + str(self.P) + " "
+        data = str(self.A) + str(self.B) + str(self.C) + str(self.D) +\
+               str(self.E) + str(self.F) + str(self.P) + " " +\
                str(self.X) + " " + str(self.Y)
         return data
 
@@ -34,10 +34,12 @@ class Gamepad() :
 ### Test fonctonnement gamepad (avec une carte mbits) ###
 if __name__ == '__main__':
     from time import sleep
-    from .pinout import mbits_pin
+    from modules.microbit.pinout import mbits_pin
 
     gp = Gamepad(mbits_pin)
 
     gp.buzzer  = gp.X
-    print(gp.read(), end="         \r")
-    sleep(0.1)
+    for i in range(100):
+        print(gp.read(), end="         \r")
+        sleep(0.1)
+

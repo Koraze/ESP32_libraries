@@ -48,7 +48,7 @@ class In_Analog() :
     def __get__(self, obj, objtype=None):
         try :
             if self.__adc :
-                val = self.__adc.read() - 2048
+                val = self.__adc.read()
                 self.__buff.append(val)
                 self.__buff.pop(0)
                 return int(sum(self.__buff) / len(self.__buff))
@@ -67,13 +67,14 @@ class Out_Freq() :
         return self.__val
     
     def __set__(self, obj, val):
-        val = int(val)
-        if val > 0 :
-            if not self.__val :
-                self.__pwm.init()
-                self.__pwm.duty()
-            self.__pwm.freq(val)
-            self.__val = val
-        else :
-            self.__pwm.deinit()
-            self.__val = 0
+        if type(val) is int :
+            val = int(val)
+            if val > 0 :
+                if not self.__val :
+                    self.__pwm.init()
+                    self.__pwm.duty()
+                self.__pwm.freq(val)
+                self.__val = val
+            else :
+                self.__pwm.deinit()
+                self.__val = 0

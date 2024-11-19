@@ -41,6 +41,12 @@ def rm_dead_aeras(value, maxi, mini) :
     value = cut_upper_aera(value, maxi)
     return value
 
+def add_dead_aeras(value, maxi, mini) :
+    value = value * (maxi-mini) / maxi
+    if value != 0 :
+        value = value + mini if value > 0 else value - mini
+    return value
+
 def exp_factor(value, factor):
     signe = 1 - 2*(value < 0)
     value = signe * (exp(abs(value)*factor)-1.0) / (exp(factor)-1.0)

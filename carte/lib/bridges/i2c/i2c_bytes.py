@@ -1,7 +1,7 @@
 # https://github.com/adafruit/Adafruit_CircuitPython_Register/blob/main/adafruit_register/i2c_bits.py
 
 from random import randint
-from .i2c_device import RWbase
+from bridges.i2c.i2c_device import RWbase
 import struct
 
 

@@ -1,7 +1,4 @@
-from machine     import I2C
-from .i2c_bytes  import RWBytes, ROBytes
-from .i2c_bit    import RWBit,   ROBit
-from .i2c_bits   import RWBits,  ROBits
+from machine import I2C
 
 
 class I2C_device:

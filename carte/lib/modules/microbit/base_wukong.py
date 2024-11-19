@@ -1,6 +1,7 @@
 # Librairies
 from micropython import const
-from bridges.i2c.i2c_device import I2C_device, RWBytes
+from bridges.i2c.i2c_device import I2C_device
+from bridges.i2c.i2c_bytes  import RWBytes
 from time import sleep
 
 

@@ -1,5 +1,6 @@
-from machine import Pin
+from machine  import Pin
 from neopixel import NeoPixel
+import gc
 
 
 class Picture():
@@ -14,7 +15,7 @@ class Picture():
         
     def create_pixel(self):
         for y in range(self.size_y):
-            self.pixel.append(list([None] * self.size_x))
+            self.pixel.append([None] * self.size_x)
             
         for y in range(self.size_y):
             for x in range(self.size_x):
@@ -23,11 +24,12 @@ class Picture():
                     self.pixel[y][x] = self.color[(self.frame[y]>>x_invert)&1]
                 elif self.model == "frame_char" :
                     self.pixel[y][x] = self.color[int(self.frame[y][x])]
+                else :
+                    raise Exception("Format d'image invalide")
+        
+        gc.collect()
     
     def print(self):
-        if self.pixel == []:
-            self.create_pixel()
-            
         for line in self.pixel :
             print(line)
 
@@ -52,6 +54,7 @@ class Matrix():
     def __np_write(self, color, x, y):
         position = self.size_y*y + x
         if 0 <= position < self.size :
+            # print(position)
             self.__np[position] = color
         
     def __rotate(self, rotate, pic, x, y):
@@ -81,8 +84,24 @@ class Matrix():
             for x in range(pic.size_x) :
                 color = pic.pixel[y][x]
                 if not transparency or color != [0, 0, 0]:
-                    xx, yy = self.__rotate(rotate, pic, x, y)
+                    # Rotation
+                    if rotate == 0 :
+                        xx = x
+                        yy = y
+                    elif rotate == 1 :
+                        xx = pic.size_y-1-y
+                        yy = x
+                    elif rotate == 2 :
+                        xx = pic.size_x-1-x
+                        yy = pic.size_y-1-y
+                    else :
+                        xx = y
+                        yy = pic.size_x-1-x
+                
+                    # Translation
                     xx, yy = xx+start_x, yy+start_y
+                    
+                    # Ecriture
                     self.__np_write(color, xx, yy)
 
     def show(self):

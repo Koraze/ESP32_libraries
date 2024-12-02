@@ -40,19 +40,17 @@ class Timer():
 
 # Fonctions tests - Exemples d'usage
 if __name__ == '__main__':
-    def exemple_1():
-        timer = Timer(500, True)
-        timer.set_pas(1000) # Exécution chaque seconde
-        timer.reinit()
-        while True :
-            timer.waiting() # Bloquant
+    # Création d'un objet Timer
+    timer = Timer(500, True)
+    timer.set_pas(1000) # Exécution chaque seconde
+    timer.reinit()
+
+    # Exemple bloquant
+    while True :
+        timer.waiting()
+        print("hello")
+
+    # Exemple non bloquant
+    while True :
+        if timer.remaining() <= 0 :  # Non bloquant
             print("hello")
-
-    def exemple_2():
-        timer = Timer(500)                  # Exécution chaque 0.5s
-        while True :
-            if timer.remaining() <= 0 :  # Non bloquant
-                print("hello")
-    
-    exemple_1()
-

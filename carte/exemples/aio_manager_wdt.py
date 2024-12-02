@@ -15,11 +15,8 @@ def blink():
     led.value(not led.value())
 
 
-"""
 from machine import WDT
 wdt = WDT(timeout=4000)
 aio_manager.add("watchdog", wdt.feed, 400)
-"""
-
 aio_manager.add("test", led, 1000)
 asyncio.run(main())

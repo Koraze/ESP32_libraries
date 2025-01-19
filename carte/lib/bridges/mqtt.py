@@ -3,21 +3,17 @@ try :
 except : 
     from umqtt.robust2 import MQTTClient
 
-from toolbox.watch  import *
-from time import sleep
+from toolbox.timer  import Timer
 
 
 class MQTT_Client():
-    def __init__(self, name, ip, port=1883, user=None, password=None, keepalive=30, ssl=False, ssl_params={}, dt=100):
+    def __init__(self, name, ip, port=1883, user=None, password=None, keepalive=30, ssl=False, ssl_params={}):
         self.__topic_sub = {}
         self.__topic_pub = {}
         
         self.__c = MQTTClient(name, ip, port=port, keepalive=keepalive, ssl=ssl, ssl_params=ssl_params, user=user, password=password)
         self.__c.set_callback(self.__callback_sub)
         self.__mqtt_init()
-        
-        self.__mqtt_dt = DT()
-        self.update_delai(dt)
         
     ###################### Fonctions privées
     def __mqtt_init(self):
@@ -48,16 +44,19 @@ class MQTT_Client():
                     print(repr(e))
     
     def __callback_pub(self):
-        for topic, watchs in self.__topic_pub.items() :
-            for watch in watchs :
-                watch.update()
-                payload = watch.get_new_value()
-                if payload is not None :
-                    self.publish(topic, payload)
+        for topic, datas in self.__topic_pub.items() :
+            for data in datas :
+                callback, payload, timer = data
+                if timer.remaining() <= 0 :
+                    value = callback()
+                    if value is not None :
+                        message = payload % value
+                        self.publish(topic, message)
         
         
     ###################### Fonctions publiques
     def connect(self) :       # Connecter au Broker MQTT
+        self.update()
         pass
 
     def disconnect(self) :    # Déconnecter du Broker MQTT
@@ -90,53 +89,44 @@ class MQTT_Client():
                 if topic not in self.__topic_pub :
                     self.__topic_pub[topic] = []
                 print("added")
-                self.__topic_pub[topic].append(Watch(callback, payload, dt))
+                self.__topic_pub[topic].append((callback, payload, Timer(dt, False)))
     
     def update(self) :
-        if self.__mqtt_dt.remaining() <= 0 :
-            self.__mqtt_reconnect()
-            self.__callback_pub()
-            self.__mqtt_update()
-            return True
-        return False
-    
-    def update_loop_debug(self) :
-        while True:
-            self.update()
-            
-    def update_loop(self) :
-        try:
-            self.update_loop_debug()
-        except Exception as e :
-            print(repr(e))    # https://stackoverflow.com/questions/1483429/how-do-i-print-an-exception-in-python
-        finally :
-            self.disconnect()
-    
-    def update_delai(self, dt) :
-        self.__mqtt_dt.set_pas(max(dt, 100))
+        self.__mqtt_reconnect()
+        self.__callback_pub()
+        self.__mqtt_update()
 
 
 # Exemple d'utilisation
-def exemple():
+if __name__ == '__main__':
+    from bridges.mqtt import MQTT_Client
+    from config import ESP32_ID, MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PW
+
+    # Modification des parametres de connexion
+    MQTT_HOST = "broker.hivemq.com"
+    MQTT_PORT = 1883
+    MQTT_USER = None
+    MQTT_PW   = None
+
+    # Fonctions callback de test
     from random import getrandbits
-    from config import MQTT_NAME, MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PW
-    
     def pub_callback():
         temperature = 20 + 0.5*getrandbits(3)
         temperature = round(temperature, 2)
         return temperature
-    
+
     def sub_callback(topic, msg):
         print(msg, "world !")
-    
-    print(f"Température aléatoire : {pub_callback()}°C")
 
-    mqtt = MQTT_Client(MQTT_NAME, MQTT_HOST, MQTT_PORT)
+    # Paramétrage de notre client MQTT
+    mqtt = MQTT_Client(ESP32_ID, MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PW)
     mqtt.connect()
-    mqtt.update_delai(200)
-    mqtt.update()
     mqtt.subscribe("foo_sensor1")
     mqtt.subscribe("foo_sensor2", sub_callback)
     mqtt.publish("foo_sensor2", "hello")
-    mqtt.publish("foo_sensor1", '{"temperature" : %.02f}', pub_callback, 10000)
-    mqtt.update_loop()
+    mqtt.publish("foo_sensor1", '{"temperature" : %.02f}', pub_callback, 5000)
+
+    # MaJ de notre client MQTT
+    while True :
+        mqtt.update()
+

@@ -1,559 +1,275 @@
-# circuitpython library adapted for micropython
-# Link   : https://github.com/adafruit/Adafruit_INA219
-# Author : Dean Miller
+# SPDX-FileCopyrightText: 2017 Scott Shawcroft, written for Adafruit Industries
+# SPDX-FileCopyrightText: Copyright (c) 2021 ladyada for Adafruit
+#
+# SPDX-License-Identifier: MIT
+"""
+`adafruit_sht4x`
+================================================================================
 
+Python library for Sensirion SHT4x temperature and humidity sensors
 
-from micropython import const
-from bridges.i2c.i2c_bytes  import RWBytes, ROBytes
-from bridges.i2c.i2c_bit    import RWBit,   ROBit
-from bridges.i2c.i2c_bits   import RWBits,  ROBits
+* Author(s): ladyada
+
+Implementation Notes
+--------------------
+
+**Hardware:**
+
+* `Adafruit SHT40 Temperature & Humidity Sensor
+  <https://www.adafruit.com/product/4885>`_ (Product ID: 4885)
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://circuitpython.org/downloads
+
+* Adafruit's Bus Device library:
+  https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
+
+"""
+
+import time
+import struct
 from bridges.i2c.i2c_device import I2C_device
+from micropython import const
 
-# Bits
-# pylint: disable=too-few-public-methods
-# Config Register (R/W)
+"""
+try:
+    from typing import Tuple
+    from busio import I2C
+except ImportError:
+    pass
+"""
 
-_REG_CONFIG = const(0x00)
-
-
-class BusVoltageRange:
-    """Constants for ``bus_voltage_range``"""
-
-    RANGE_16V = 0x00  # set bus voltage range to 16V
-    RANGE_32V = 0x01  # set bus voltage range to 32V (default)
-
-
-class Gain:
-    """Constants for ``gain``"""
-
-    DIV_1_40MV = 0x00  # shunt prog. gain set to  1, 40 mV range
-    DIV_2_80MV = 0x01  # shunt prog. gain set to /2, 80 mV range
-    DIV_4_160MV = 0x02  # shunt prog. gain set to /4, 160 mV range
-    DIV_8_320MV = 0x03  # shunt prog. gain set to /8, 320 mV range
+__version__ = "0.0.0+auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_SHT4x.git"
 
 
-class ADCResolution:
-    """Constants for ``bus_adc_resolution`` or ``shunt_adc_resolution``"""
-
-    ADCRES_9BIT_1S = 0x00  #  9bit,   1 sample,     84us
-    ADCRES_10BIT_1S = 0x01  # 10bit,   1 sample,    148us
-    ADCRES_11BIT_1S = 0x02  # 11 bit,  1 sample,    276us
-    ADCRES_12BIT_1S = 0x03  # 12 bit,  1 sample,    532us
-    ADCRES_12BIT_2S = 0x09  # 12 bit,  2 samples,  1.06ms
-    ADCRES_12BIT_4S = 0x0A  # 12 bit,  4 samples,  2.13ms
-    ADCRES_12BIT_8S = 0x0B  # 12bit,   8 samples,  4.26ms
-    ADCRES_12BIT_16S = 0x0C  # 12bit,  16 samples,  8.51ms
-    ADCRES_12BIT_32S = 0x0D  # 12bit,  32 samples, 17.02ms
-    ADCRES_12BIT_64S = 0x0E  # 12bit,  64 samples, 34.05ms
-    ADCRES_12BIT_128S = 0x0F  # 12bit, 128 samples, 68.10ms
+_SHT4X_DEFAULT_ADDR = const(0x44)  # SHT4X I2C Address
+_SHT4X_READSERIAL = const(0x89)  # Read Out of Serial Register
+_SHT4X_SOFTRESET = const(0x94)  # Soft Reset
 
 
-class Mode:
-    """Constants for ``mode``"""
+class CV:
+    """struct helper"""
 
-    POWERDOWN = 0x00  # power down
-    SVOLT_TRIGGERED = 0x01  # shunt voltage triggered
-    BVOLT_TRIGGERED = 0x02  # bus voltage triggered
-    SANDBVOLT_TRIGGERED = 0x03  # shunt and bus voltage triggered
-    ADCOFF = 0x04  # ADC off
-    SVOLT_CONTINUOUS = 0x05  # shunt voltage continuous
-    BVOLT_CONTINUOUS = 0x06  # bus voltage continuous
-    SANDBVOLT_CONTINUOUS = 0x07  # shunt and bus voltage continuous
+    @classmethod
+    def add_values(cls, value_tuples: tuple) -> None:
+        """Add CV values to the class"""
+        cls.string = {}
+        cls.delay = {}
 
+        for value_tuple in value_tuples:
+            name, value, string, delay = value_tuple
+            setattr(cls, name, value)
+            cls.string[value] = string
+            cls.delay[value] = delay
 
-# SHUNT VOLTAGE REGISTER (R)
-_REG_SHUNTVOLTAGE = const(0x01)
-
-# BUS VOLTAGE REGISTER (R)
-_REG_BUSVOLTAGE = const(0x02)
-
-# POWER REGISTER (R)
-_REG_POWER = const(0x03)
-
-# CURRENT REGISTER (R)
-_REG_CURRENT = const(0x04)
-
-# CALIBRATION REGISTER (R/W)
-_REG_CALIBRATION = const(0x05)
-# pylint: enable=too-few-public-methods
+    @classmethod
+    def is_valid(cls, value: int) -> bool:
+        """Validate that a given value is a member"""
+        return value in cls.string
 
 
-def _to_signed(num: int) -> int:
-    if num > 0x7FFF:
-        num -= 0x10000
-    return num
+class Mode(CV):
+    """Options for ``power_mode``"""
+
+    pass  # pylint: disable=unnecessary-pass
 
 
-class INA219:
-    """Driver for the INA219 current sensor"""
+Mode.add_values(
+    (
+        ("NOHEAT_HIGHPRECISION", 0xFD, "No heater, high precision", 0.01),
+        ("NOHEAT_MEDPRECISION", 0xF6, "No heater, med precision", 0.005),
+        ("NOHEAT_LOWPRECISION", 0xE0, "No heater, low precision", 0.002),
+        ("HIGHHEAT_1S", 0x39, "High heat, 1 second", 1.1),
+        ("HIGHHEAT_100MS", 0x32, "High heat, 0.1 second", 0.11),
+        ("MEDHEAT_1S", 0x2F, "Med heat, 1 second", 1.1),
+        ("MEDHEAT_100MS", 0x24, "Med heat, 0.1 second", 0.11),
+        ("LOWHEAT_1S", 0x1E, "Low heat, 1 second", 1.1),
+        ("LOWHEAT_100MS", 0x15, "Low heat, 0.1 second", 0.11),
+    )
+)
 
-    # Basic API:
 
-    # INA219( i2c_bus, addr)  Create instance of INA219 sensor
-    #    :param i2c_bus          The I2C bus the INA219is connected to
-    #    :param addr (0x40)      Address of the INA219 on the bus (default 0x40)
+class SHT4x:
+    """
+    A driver for the SHT4x temperature and humidity sensor.
 
-    # shunt_voltage               RO : shunt voltage scaled to Volts
-    # bus_voltage                 RO : bus voltage (V- to GND) scaled to volts (==load voltage)
-    # current                     RO : current through shunt, scaled to mA
-    # power                       RO : power consumption of the load, scaled to Watt
-    # set_calibration_32V_2A()    Initialize chip for 32V max and up to 2A (default)
-    # set_calibration_32V_1A()    Initialize chip for 32V max and up to 1A
-    # set_calibration_16V_400mA() Initialize chip for 16V max and up to 400mA
+    :param ~busio.I2C i2c_bus: The I2C bus the SHT4x is connected to.
+    :param int address: The I2C device address. Default is :const:`0x44`
 
-    # Advanced API:
-    # config register break-up
-    #   reset                     WO : Write Reset.RESET to reset the chip (must recalibrate)
-    #   bus_voltage_range         RW : Bus Voltage Range field (use BusVoltageRange.XXX constants)
-    #   gain                      RW : Programmable Gain field (use Gain.XXX constants)
-    #   bus_adc_resolution        RW : Bus ADC resolution and averaging modes (ADCResolution.XXX)
-    #   shunt_adc_resolution      RW : Shunt ADC resolution and averaging modes (ADCResolution.XXX)
-    #   mode                      RW : operating modes in config register (use Mode.XXX constants)
 
-    # raw_shunt_voltage           RO : Shunt Voltage register (not scaled)
-    # raw_bus_voltage             RO : Bus Voltage field in Bus Voltage register (not scaled)
-    # conversion_ready            RO : Conversion Ready bit in Bus Voltage register
-    # overflow                    RO : Math Overflow bit in Bus Voltage register
-    # raw_power                   RO : Power register (not scaled)
-    # raw_current                 RO : Current register (not scaled)
-    # calibration                 RW : calibration register (note: value is cached)
+    **Quickstart: Importing and using the SHT4x temperature and humidity sensor**
 
-    def __init__(self, i2c: I2C, addr: int = 0x40) -> None:
-        self.i2c_device = I2C_device(i2c, addr)
+        Here is an example of using the :class:`SHT4x`.
+        First you will need to import the libraries to use the sensor
 
-        # Set chip to known config values to start
-        self._cal_value = 0
-        self._current_lsb = 0
-        self._power_lsb = 0
-        self.set_calibration_32V_2A()
+        .. code-block:: python
 
-    # config register break-up
-    reset = RWBits(_REG_CONFIG, 15, 1, 2, False)
-    bus_voltage_range = RWBits(_REG_CONFIG, 13, 1, 2, False)
-    gain = RWBits(_REG_CONFIG, 11, 2, 2, False)
-    bus_adc_resolution = RWBits(_REG_CONFIG, 7, 4, 2, False)
-    shunt_adc_resolution = RWBits(_REG_CONFIG, 3, 4, 2, False)
-    mode = RWBits(_REG_CONFIG, 0, 3, 2, False)
+            import board
+            import adafruit_sht4x
 
-    # shunt voltage register
-    raw_shunt_voltage = ROBytes(_REG_SHUNTVOLTAGE, ">h")
+        Once this is done you can define your `board.I2C` object and define your sensor object
 
-    # bus voltage register
-    raw_bus_voltage = ROBits(_REG_BUSVOLTAGE, 3, 13, 2, False)
-    conversion_ready = ROBit(_REG_BUSVOLTAGE, 1, 2, False)
-    overflow = ROBit(_REG_BUSVOLTAGE, 0, 2, False)
+        .. code-block:: python
 
-    # power and current registers
-    raw_power = ROBytes(_REG_POWER, ">H")
-    raw_current = ROBytes(_REG_CURRENT, ">h")
+            i2c = board.I2C()   # uses board.SCL and board.SDA
+            sht = adafruit_sht4x.SHT4x(i2c)
 
-    # calibration register
-    _raw_calibration = RWBytes(_REG_CALIBRATION, ">H")
+        You can now make some initial settings on the sensor
+
+        .. code-block:: python
+
+            sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+
+        Now you have access to the temperature and humidity using the :attr:`measurements`.
+        It will return a tuple with the :attr:`temperature` and :attr:`relative_humidity`
+        measurements
+
+
+        .. code-block:: python
+
+            temperature, relative_humidity = sht.measurements
+
+    """
+
+    def __init__(self, i2c_bus, address: int = _SHT4X_DEFAULT_ADDR) -> None:
+        self._i2c = I2C_device(i2c_bus, address)
+        self._buffer = bytearray(6)
+        self.reset()
+        self._mode = Mode.NOHEAT_HIGHPRECISION  # pylint: disable=no-member
 
     @property
-    def calibration(self) -> int:
-        """Calibration register (cached value)"""
-        return self._cal_value  # return cached value
+    def serial_number(self) -> int:
+        """The unique 32-bit serial number"""
+        self._buffer[0] = _SHT4X_READSERIAL
+        # with self.i2c_device as i2c:
+        self._i2c.write(self._buffer[0:1])
+        time.sleep(0.01)
+        self._i2c.read(self._buffer)
 
-    @calibration.setter
-    def calibration(self, cal_value: int) -> None:
-        self._cal_value = (
-            cal_value  # value is cached for ``current`` and ``power`` properties
-        )
-        self._raw_calibration = self._cal_value
+        ser1 = self._buffer[0:2]
+        ser1_crc = self._buffer[2]
+        ser2 = self._buffer[3:5]
+        ser2_crc = self._buffer[5]
 
-    @property
-    def shunt_voltage(self) -> float:
-        """The shunt voltage (between V+ and V-) in Volts (so +-.327V)"""
-        # The least signficant bit is 10uV which is 0.00001 volts
-        return self.raw_shunt_voltage * 0.00001
+        # check CRC of bytes
+        if ser1_crc != self._crc8(ser1) or ser2_crc != self._crc8(ser2):
+            raise RuntimeError("Invalid CRC calculated")
 
-    @property
-    def bus_voltage(self) -> float:
-        """The bus voltage (between V- and GND) in Volts"""
-        # Shift to the right 3 to drop CNVR and OVF and multiply by LSB
-        # Each least signficant bit is 4mV
-        return self.raw_bus_voltage * 0.004
+        serial = (ser1[0] << 24) + (ser1[1] << 16) + (ser2[0] << 8) + ser2[1]
+        return serial
 
-    @property
-    def current(self) -> float:
-        """The current through the shunt resistor in milliamps."""
-        # Sometimes a sharp load will reset the INA219, which will
-        # reset the cal register, meaning CURRENT and POWER will
-        # not be available ... always setting a cal
-        # value even if it's an unfortunate extra step
-        self._raw_calibration = self._cal_value
-        # Now we can safely read the CURRENT register!
-        return self.raw_current * self._current_lsb
+    def reset(self) -> None:
+        """Perform a soft reset of the sensor, resetting all settings to their power-on defaults"""
+        self._buffer[0] = _SHT4X_SOFTRESET
+        # with self.i2c_device as i2c:
+        self._i2c.write(self._buffer[0:1])
+        time.sleep(0.001)
 
     @property
-    def power(self) -> float:
-        """The power through the load in Watt."""
-        # Sometimes a sharp load will reset the INA219, which will
-        # reset the cal register, meaning CURRENT and POWER will
-        # not be available ... always setting a cal
-        # value even if it's an unfortunate extra step
-        self._raw_calibration = self._cal_value
-        # Now we can safely read the CURRENT register!
-        return self.raw_power * self._power_lsb
+    def mode(self) -> int:
+        """The current sensor reading mode (heater and precision)"""
+        return self._mode
 
-    def set_calibration_32V_2A(self) -> None:  # pylint: disable=invalid-name
-        """Configures to INA219 to be able to measure up to 32V and 2A of current. Counter
-        overflow occurs at 3.2A.
+    @mode.setter
+    def mode(self, new_mode: int) -> None:
+        if not Mode.is_valid(new_mode):
+            raise AttributeError("mode must be a Mode")
+        self._mode = new_mode
 
-        .. note:: These calculations assume a 0.1 shunt ohm resistor is present
-        """
-        # By default we use a pretty huge range for the input voltage,
-        # which probably isn't the most appropriate choice for system
-        # that don't use a lot of power.  But all of the calculations
-        # are shown below if you want to change the settings.  You will
-        # also need to change any relevant register settings, such as
-        # setting the VBUS_MAX to 16V instead of 32V, etc.
+    @property
+    def relative_humidity(self) -> float:
+        """The current relative humidity in % rH. This is a value from 0-100%."""
+        return self.measurements[1]
 
-        # VBUS_MAX = 32V             (Assumes 32V, can also be set to 16V)
-        # VSHUNT_MAX = 0.32          (Assumes Gain 8, 320mV, can also be 0.16, 0.08, 0.04)
-        # RSHUNT = 0.1               (Resistor value in ohms)
+    @property
+    def temperature(self) -> float:
+        """The current temperature in degrees Celsius"""
+        return self.measurements[0]
 
-        # 1. Determine max possible current
-        # MaxPossible_I = VSHUNT_MAX / RSHUNT
-        # MaxPossible_I = 3.2A
+    @property
+    def measurements(self) -> tuple:
+        """both `temperature` and `relative_humidity`, read simultaneously"""
 
-        # 2. Determine max expected current
-        # MaxExpected_I = 2.0A
+        temperature = None
+        humidity = None
+        command = self._mode
 
-        # 3. Calculate possible range of LSBs (Min = 15-bit, Max = 12-bit)
-        # MinimumLSB = MaxExpected_I/32767
-        # MinimumLSB = 0.000061              (61uA per bit)
-        # MaximumLSB = MaxExpected_I/4096
-        # MaximumLSB = 0,000488              (488uA per bit)
+        # with self.i2c_device as i2c:
+        self._buffer[0] = command
+        self._i2c.write(self._buffer[0:1])
+        time.sleep(Mode.delay[self._mode])
+        self._i2c.read(self._buffer)
 
-        # 4. Choose an LSB between the min and max values
-        #    (Preferrably a roundish number close to MinLSB)
-        # CurrentLSB = 0.0001 (100uA per bit)
-        self._current_lsb = 0.1  # Current LSB = 100uA per bit
+        # separate the read data
+        temp_data = self._buffer[0:2]
+        temp_crc = self._buffer[2]
+        humidity_data = self._buffer[3:5]
+        humidity_crc = self._buffer[5]
 
-        # 5. Compute the calibration register
-        # Cal = trunc (0.04096 / (Current_LSB * RSHUNT))
-        # Cal = 4096 (0x1000)
+        # check CRC of bytes
+        if temp_crc != self._crc8(temp_data) or humidity_crc != self._crc8(
+            humidity_data
+        ):
+            raise RuntimeError("Invalid CRC calculated")
 
-        self._cal_value = 4096
+        # decode data into human values:
+        # convert bytes into 16-bit signed integer
+        # convert the LSB value to a human value according to the datasheet
+        temperature = struct.unpack_from(">H", temp_data)[0]
+        temperature = -45.0 + 175.0 * temperature / 65535.0
 
-        # 6. Calculate the power LSB
-        # PowerLSB = 20 * CurrentLSB
-        # PowerLSB = 0.002 (2mW per bit)
-        self._power_lsb = 0.002  # Power LSB = 2mW per bit
+        # repeat above steps for humidity data
+        humidity = struct.unpack_from(">H", humidity_data)[0]
+        humidity = -6.0 + 125.0 * humidity / 65535.0
+        humidity = max(min(humidity, 100), 0)
 
-        # 7. Compute the maximum current and shunt voltage values before overflow
-        #
-        # Max_Current = Current_LSB * 32767
-        # Max_Current = 3.2767A before overflow
-        #
-        # If Max_Current > Max_Possible_I then
-        #    Max_Current_Before_Overflow = MaxPossible_I
-        # Else
-        #    Max_Current_Before_Overflow = Max_Current
-        # End If
-        #
-        # Max_ShuntVoltage = Max_Current_Before_Overflow * RSHUNT
-        # Max_ShuntVoltage = 0.32V
-        #
-        # If Max_ShuntVoltage >= VSHUNT_MAX
-        #    Max_ShuntVoltage_Before_Overflow = VSHUNT_MAX
-        # Else
-        #    Max_ShuntVoltage_Before_Overflow = Max_ShuntVoltage
-        # End If
+        return (temperature, humidity)
 
-        # 8. Compute the Maximum Power
-        # MaximumPower = Max_Current_Before_Overflow * VBUS_MAX
-        # MaximumPower = 3.2 * 32V
-        # MaximumPower = 102.4W
+    ## CRC-8 formula from page 14 of SHTC3 datasheet
+    # https://media.digikey.com/pdf/Data%20Sheets/Sensirion%20PDFs/HT_DS_SHTC3_D1.pdf
+    # Test data [0xBE, 0xEF] should yield 0x92
 
-        # Set Calibration register to 'Cal' calculated above
-        self._raw_calibration = self._cal_value
-
-        # Set Config register to take into account the settings above
-        self.bus_voltage_range = BusVoltageRange.RANGE_32V
-        self.gain = Gain.DIV_8_320MV
-        self.bus_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.shunt_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.mode = Mode.SANDBVOLT_CONTINUOUS
-
-    def set_calibration_32V_1A(self) -> None:  # pylint: disable=invalid-name
-        """Configures to INA219 to be able to measure up to 32V and 1A of current. Counter overflow
-        occurs at 1.3A.
-
-        .. note:: These calculations assume a 0.1 ohm shunt resistor is present"""
-        # By default we use a pretty huge range for the input voltage,
-        # which probably isn't the most appropriate choice for system
-        # that don't use a lot of power.  But all of the calculations
-        # are shown below if you want to change the settings.  You will
-        # also need to change any relevant register settings, such as
-        # setting the VBUS_MAX to 16V instead of 32V, etc.
-
-        # VBUS_MAX = 32V        (Assumes 32V, can also be set to 16V)
-        # VSHUNT_MAX = 0.32    (Assumes Gain 8, 320mV, can also be 0.16, 0.08, 0.04)
-        # RSHUNT = 0.1            (Resistor value in ohms)
-
-        # 1. Determine max possible current
-        # MaxPossible_I = VSHUNT_MAX / RSHUNT
-        # MaxPossible_I = 3.2A
-
-        # 2. Determine max expected current
-        # MaxExpected_I = 1.0A
-
-        # 3. Calculate possible range of LSBs (Min = 15-bit, Max = 12-bit)
-        # MinimumLSB = MaxExpected_I/32767
-        # MinimumLSB = 0.0000305             (30.5uA per bit)
-        # MaximumLSB = MaxExpected_I/4096
-        # MaximumLSB = 0.000244              (244uA per bit)
-
-        # 4. Choose an LSB between the min and max values
-        #    (Preferrably a roundish number close to MinLSB)
-        # CurrentLSB = 0.0000400 (40uA per bit)
-        self._current_lsb = 0.04  # In milliamps
-
-        # 5. Compute the calibration register
-        # Cal = trunc (0.04096 / (Current_LSB * RSHUNT))
-        # Cal = 10240 (0x2800)
-
-        self._cal_value = 10240
-
-        # 6. Calculate the power LSB
-        # PowerLSB = 20 * CurrentLSB
-        # PowerLSB = 0.0008 (800uW per bit)
-        self._power_lsb = 0.0008
-
-        # 7. Compute the maximum current and shunt voltage values before overflow
-        #
-        # Max_Current = Current_LSB * 32767
-        # Max_Current = 1.31068A before overflow
-        #
-        # If Max_Current > Max_Possible_I then
-        #    Max_Current_Before_Overflow = MaxPossible_I
-        # Else
-        #    Max_Current_Before_Overflow = Max_Current
-        # End If
-        #
-        # ... In this case, we're good though since Max_Current is less than MaxPossible_I
-        #
-        # Max_ShuntVoltage = Max_Current_Before_Overflow * RSHUNT
-        # Max_ShuntVoltage = 0.131068V
-        #
-        # If Max_ShuntVoltage >= VSHUNT_MAX
-        #    Max_ShuntVoltage_Before_Overflow = VSHUNT_MAX
-        # Else
-        #    Max_ShuntVoltage_Before_Overflow = Max_ShuntVoltage
-        # End If
-
-        # 8. Compute the Maximum Power
-        # MaximumPower = Max_Current_Before_Overflow * VBUS_MAX
-        # MaximumPower = 1.31068 * 32V
-        # MaximumPower = 41.94176W
-
-        # Set Calibration register to 'Cal' calculated above
-        self._raw_calibration = self._cal_value
-
-        # Set Config register to take into account the settings above
-        self.bus_voltage_range = BusVoltageRange.RANGE_32V
-        self.gain = Gain.DIV_8_320MV
-        self.bus_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.shunt_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.mode = Mode.SANDBVOLT_CONTINUOUS
-
-    def set_calibration_16V_400mA(self) -> None:  # pylint: disable=invalid-name
-        """Configures to INA219 to be able to measure up to 16V and 400mA of current. Counter
-        overflow occurs at 1.6A.
-
-        .. note:: These calculations assume a 0.1 ohm shunt resistor is present"""
-        # Calibration which uses the highest precision for
-        # current measurement (0.1mA), at the expense of
-        # only supporting 16V at 400mA max.
-
-        # VBUS_MAX = 16V
-        # VSHUNT_MAX = 0.04          (Assumes Gain 1, 40mV)
-        # RSHUNT = 0.1               (Resistor value in ohms)
-
-        # 1. Determine max possible current
-        # MaxPossible_I = VSHUNT_MAX / RSHUNT
-        # MaxPossible_I = 0.4A
-
-        # 2. Determine max expected current
-        # MaxExpected_I = 0.4A
-
-        # 3. Calculate possible range of LSBs (Min = 15-bit, Max = 12-bit)
-        # MinimumLSB = MaxExpected_I/32767
-        # MinimumLSB = 0.0000122              (12uA per bit)
-        # MaximumLSB = MaxExpected_I/4096
-        # MaximumLSB = 0.0000977              (98uA per bit)
-
-        # 4. Choose an LSB between the min and max values
-        #    (Preferrably a roundish number close to MinLSB)
-        # CurrentLSB = 0.00005 (50uA per bit)
-        self._current_lsb = 0.05  # in milliamps
-
-        # 5. Compute the calibration register
-        # Cal = trunc (0.04096 / (Current_LSB * RSHUNT))
-        # Cal = 8192 (0x2000)
-
-        self._cal_value = 8192
-
-        # 6. Calculate the power LSB
-        # PowerLSB = 20 * CurrentLSB
-        # PowerLSB = 0.001 (1mW per bit)
-        self._power_lsb = 0.001
-
-        # 7. Compute the maximum current and shunt voltage values before overflow
-        #
-        # Max_Current = Current_LSB * 32767
-        # Max_Current = 1.63835A before overflow
-        #
-        # If Max_Current > Max_Possible_I then
-        #    Max_Current_Before_Overflow = MaxPossible_I
-        # Else
-        #    Max_Current_Before_Overflow = Max_Current
-        # End If
-        #
-        # Max_Current_Before_Overflow = MaxPossible_I
-        # Max_Current_Before_Overflow = 0.4
-        #
-        # Max_ShuntVoltage = Max_Current_Before_Overflow * RSHUNT
-        # Max_ShuntVoltage = 0.04V
-        #
-        # If Max_ShuntVoltage >= VSHUNT_MAX
-        #    Max_ShuntVoltage_Before_Overflow = VSHUNT_MAX
-        # Else
-        #    Max_ShuntVoltage_Before_Overflow = Max_ShuntVoltage
-        # End If
-        #
-        # Max_ShuntVoltage_Before_Overflow = VSHUNT_MAX
-        # Max_ShuntVoltage_Before_Overflow = 0.04V
-
-        # 8. Compute the Maximum Power
-        # MaximumPower = Max_Current_Before_Overflow * VBUS_MAX
-        # MaximumPower = 0.4 * 16V
-        # MaximumPower = 6.4W
-
-        # Set Calibration register to 'Cal' calculated above
-        self._raw_calibration = self._cal_value
-
-        # Set Config register to take into account the settings above
-        self.bus_voltage_range = BusVoltageRange.RANGE_16V
-        self.gain = Gain.DIV_1_40MV
-        self.bus_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.shunt_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.mode = Mode.SANDBVOLT_CONTINUOUS
-
-    def set_calibration_16V_5A(self) -> None:  # pylint: disable=invalid-name
-        """Configures to INA219 to be able to measure up to 16V and 5000mA of current. Counter
-        overflow occurs at 8.0A.
-
-        .. note:: These calculations assume a 0.02 ohm shunt resistor is present"""
-        # Calibration which uses the highest precision for
-        # current measurement (0.1mA), at the expense of
-        # only supporting 16V at 5000mA max.
-
-        # VBUS_MAX = 16V
-        # VSHUNT_MAX = 0.16          (Assumes Gain 3, 160mV)
-        # RSHUNT = 0.02              (Resistor value in ohms)
-
-        # 1. Determine max possible current
-        # MaxPossible_I = VSHUNT_MAX / RSHUNT
-        # MaxPossible_I = 8.0A
-
-        # 2. Determine max expected current
-        # MaxExpected_I = 5.0A
-
-        # 3. Calculate possible range of LSBs (Min = 15-bit, Max = 12-bit)
-        # MinimumLSB = MaxExpected_I/32767
-        # MinimumLSB = 0.0001529              (uA per bit)
-        # MaximumLSB = MaxExpected_I/4096
-        # MaximumLSB = 0.0012207              (uA per bit)
-
-        # 4. Choose an LSB between the min and max values
-        #    (Preferrably a roundish number close to MinLSB)
-        # CurrentLSB = 0.00016 (uA per bit)
-        self._current_lsb = 0.1524  # in milliamps
-
-        # 5. Compute the calibration register
-        # Cal = trunc (0.04096 / (Current_LSB * RSHUNT))
-        # Cal = 13434 (0x347a)
-
-        self._cal_value = 13434
-
-        # 6. Calculate the power LSB
-        # PowerLSB = 20 * CurrentLSB
-        # PowerLSB = 0.003 (3.048mW per bit)
-        self._power_lsb = 0.003048
-
-        # 7. Compute the maximum current and shunt voltage values before overflow
-        #
-        # 8. Compute the Maximum Power
-        #
-
-        # Set Calibration register to 'Cal' calcutated above
-        self._raw_calibration = self._cal_value
-
-        # Set Config register to take into account the settings above
-        self.bus_voltage_range = BusVoltageRange.RANGE_16V
-        self.gain = Gain.DIV_4_160MV
-        self.bus_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.shunt_adc_resolution = ADCResolution.ADCRES_12BIT_1S
-        self.mode = Mode.SANDBVOLT_CONTINUOUS
+    @staticmethod
+    def _crc8(buffer) -> int:
+        """verify the crc8 checksum"""
+        crc = 0xFF
+        for byte in buffer:
+            crc ^= byte
+            for _ in range(8):
+                if crc & 0x80:
+                    crc = (crc << 1) ^ 0x31
+                else:
+                    crc = crc << 1
+        return crc & 0xFF  # return the bottom 8 bits
 
 
-# Exemple d'utilisation
+
 def exemple():
-    # SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
-    # SPDX-License-Identifier: MIT
-
-    """Sample code and test for adafruit_ina219"""
-
-    import time
+    from time    import sleep
     from machine import Pin, I2C
     
     # Alimentation du port I2C Qwiic
-    i2c_power_pin = Pin(2, Pin.OUT)
+    i2c_power_pin = Pin(7, Pin.OUT)
     i2c_power_pin.on()
 
-    # Ouverture du port I2C
-    i2c = I2C(0, scl=Pin(20), sda=Pin(22), freq=100000)
+    # Activation et utilisation de l'I2C Hardware 1
+    i2c    = I2C(1, scl=Pin(4), sda=Pin(3))
+    sht    = SHT4x(i2c)
     
-    # i2c_bus = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
+    print("Found SHT4x with serial number", hex(sht.serial_number))
 
-    ina219 = INA219(i2c)
+    sht.mode = Mode.NOHEAT_HIGHPRECISION
+    # Can also set the mode to enable heater
+    # sht.mode = adafruit_sht4x.Mode.LOWHEAT_100MS
+    print("Current mode is: ", Mode.string[sht.mode])
 
-    print("ina219 test")
-
-    # display some of the advanced field (just to test)
-    print("Config register:")
-    print("  bus_voltage_range:    0x%1X" % ina219.bus_voltage_range)
-    print("  gain:                 0x%1X" % ina219.gain)
-    print("  bus_adc_resolution:   0x%1X" % ina219.bus_adc_resolution)
-    print("  shunt_adc_resolution: 0x%1X" % ina219.shunt_adc_resolution)
-    print("  mode:                 0x%1X" % ina219.mode)
-    print("")
-
-    # measure and display loop
     while True:
-        bus_voltage = ina219.bus_voltage  # voltage on V- (load side)
-        shunt_voltage = ina219.shunt_voltage  # voltage between V+ and V- across the shunt
-        current = ina219.current  # current in mA
-        power = ina219.power  # power in watts
-
-        # INA219 measure bus voltage on the load side. So PSU voltage = bus_voltage + shunt_voltage
-        print("Voltage (VIN+) : {:6.3f}   V".format(bus_voltage + shunt_voltage))
-        print("Voltage (VIN-) : {:6.3f}   V".format(bus_voltage))
-        print("Shunt Voltage  : {:8.5f} V".format(shunt_voltage))
-        print("Shunt Current  : {:7.4f}  A".format(current / 1000))
-        print("Power Calc.    : {:8.5f} W".format(bus_voltage * (current / 1000)))
-        print("Power Register : {:6.3f}   W".format(power))
+        temperature, relative_humidity = sht.measurements
+        print("Temperature: %0.2f C" % temperature)
+        print("Humidity: %0.1f %%" % relative_humidity)
         print("")
+        time.sleep(1)
 
-        # Check internal calculations haven't overflowed (doesn't detect ADC overflows)
-        if ina219.overflow:
-            print("Internal Math Overflow Detected!")
-            print("")
-
-        time.sleep(2)
-
-exemple()
